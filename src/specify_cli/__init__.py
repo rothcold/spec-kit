@@ -53,6 +53,15 @@ import ssl
 import truststore
 from datetime import datetime, timezone
 
+# Initialize i18n
+from specify_cli.i18n.core import setup_i18n, get_active_locale
+
+# Set up translation functions globally (will be re-initialized with CLI args)
+_, ngettext = setup_i18n()
+
+# Global language option - will be used by callback to re-initialize i18n
+_cli_lang: Optional[str] = None
+
 ssl_context = truststore.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
 client = httpx.Client(verify=ssl_context)
 
@@ -241,7 +250,8 @@ BANNER = """
 ╚══════╝╚═╝     ╚══════╝ ╚═════╝╚═╝╚═╝        ╚═╝   
 """
 
-TAGLINE = "GitHub Spec Kit - Spec-Driven Development Toolkit"
+# Note: TAGLINE is translatable
+TAGLINE = _("GitHub Spec Kit - Spec-Driven Development Toolkit")
 class StepTracker:
     """Track and render hierarchical steps without emojis, similar to Claude Code tree output.
     Supports live auto-refresh via an attached refresh callback.
@@ -456,11 +466,29 @@ def show_banner():
     console.print()
 
 @app.callback()
-def callback(ctx: typer.Context):
-    """Show banner when no subcommand is provided."""
+def callback(
+    ctx: typer.Context,
+    lang: Optional[str] = typer.Option(
+        None,
+        "--lang",
+        help="Language for CLI output (en_US, zh_CN)",
+        envvar="SPECIFY_LANG",
+    ),
+):
+    """
+    Show banner when no subcommand is provided.
+    
+    Global Options:
+        --lang: Language for CLI output (default: en_US)
+    """
+    # Re-initialize i18n with CLI language argument
+    global _, ngettext, _cli_lang
+    _cli_lang = lang
+    _, ngettext = setup_i18n(cli_lang=lang)
+    
     if ctx.invoked_subcommand is None and "--help" not in sys.argv and "-h" not in sys.argv:
         show_banner()
-        console.print(Align.center("[dim]Run 'specify --help' for usage information[/dim]"))
+        console.print(Align.center(_("[dim]Run 'specify --help' for usage information[/dim]")))
         console.print()
 
 def run_command(cmd: list[str], check_return: bool = True, capture: bool = False, shell: bool = False) -> Optional[str]:
@@ -474,10 +502,10 @@ def run_command(cmd: list[str], check_return: bool = True, capture: bool = False
             return None
     except subprocess.CalledProcessError as e:
         if check_return:
-            console.print(f"[red]Error running command:[/red] {' '.join(cmd)}")
-            console.print(f"[red]Exit code:[/red] {e.returncode}")
+            console.print(_("[red]Error running command:[/red] {cmd}").format(cmd=' '.join(cmd)))
+            console.print(_("[red]Exit code:[/red] {code}").format(code=e.returncode))
             if hasattr(e, 'stderr') and e.stderr:
-                console.print(f"[red]Error output:[/red] {e.stderr}")
+                console.print(_("[red]Error output:[/red] {output}").format(output=e.stderr))
             raise
         return None
 
@@ -562,7 +590,7 @@ def init_git_repo(project_path: Path, quiet: bool = False) -> Tuple[bool, Option
             error_msg += f"\nOutput: {e.stdout.strip()}"
         
         if not quiet:
-            console.print(f"[red]Error initializing git repository:[/red] {e}")
+            console.print(_("[red]Error initializing git repository:[/red] {error}").format(error=str(e)))
         return False, error_msg
     finally:
         os.chdir(original_cwd)
@@ -635,13 +663,13 @@ def merge_json_files(existing_path: Path, new_content: dict, verbose: bool = Fal
     return merged
 
 def download_template_from_github(ai_assistant: str, download_dir: Path, *, script_type: str = "sh", verbose: bool = True, show_progress: bool = True, client: httpx.Client = None, debug: bool = False, github_token: str = None) -> Tuple[Path, dict]:
-    repo_owner = "github"
+    repo_owner = "rothcold"
     repo_name = "spec-kit"
     if client is None:
         client = httpx.Client(verify=ssl_context)
 
     if verbose:
-        console.print("[cyan]Fetching latest release information...[/cyan]")
+        console.print(_("[cyan]Fetching latest release information...[/cyan]"))
     api_url = f"https://api.github.com/repos/{repo_owner}/{repo_name}/releases/latest"
 
     try:
@@ -663,7 +691,7 @@ def download_template_from_github(ai_assistant: str, download_dir: Path, *, scri
         except ValueError as je:
             raise RuntimeError(f"Failed to parse release JSON: {je}\nRaw (truncated 400): {response.text[:400]}")
     except Exception as e:
-        console.print(f"[red]Error fetching release information[/red]")
+        console.print(_("[red]Error fetching release information[/red]"))
         console.print(Panel(str(e), title="Fetch Error", border_style="red"))
         raise typer.Exit(1)
 
@@ -677,7 +705,10 @@ def download_template_from_github(ai_assistant: str, download_dir: Path, *, scri
     asset = matching_assets[0] if matching_assets else None
 
     if asset is None:
-        console.print(f"[red]No matching release asset found[/red] for [bold]{ai_assistant}[/bold] (expected pattern: [bold]{pattern}[/bold])")
+        console.print(
+            _("[red]No matching release asset found[/red] for [bold]{assistant}[/bold] (expected pattern: [bold]{pattern}[/bold])")
+            .format(assistant=ai_assistant, pattern=pattern)
+        )
         asset_names = [a.get('name', '?') for a in assets]
         console.print(Panel("\n".join(asset_names) or "(no assets)", title="Available Assets", border_style="yellow"))
         raise typer.Exit(1)
@@ -942,6 +973,131 @@ def ensure_executable_scripts(project_path: Path, tracker: StepTracker | None = 
             for f in failures:
                 console.print(f"  - {f}")
 
+def apply_localized_templates(project_path: Path, locale: str, selected_ai: str, tracker: StepTracker | None = None) -> None:
+    """Replace English command templates with localized versions if available.
+    
+    Args:
+        project_path: Path to the extracted project
+        locale: Target locale (e.g., 'zh_CN')
+        selected_ai: Selected AI assistant (e.g., 'claude', 'cursor-agent')
+        tracker: Optional step tracker for progress reporting
+    """
+    # Skip if English locale
+    if locale == "en_US":
+        return
+    
+    # Strategy 1: Look for templates in the extracted project's .specify directory
+    # (This is where release packages place them)
+    localized_templates_dir = project_path / '.specify' / 'templates' / 'i18n' / locale / 'commands'
+    
+    # Strategy 2: If not found in project, try package installation
+    if not localized_templates_dir.exists():
+        try:
+            import importlib.resources
+            if hasattr(importlib.resources, 'files'):
+                # Python 3.9+
+                package_root = importlib.resources.files('specify_cli').parent
+            else:
+                # Fallback for older Python
+                import pkg_resources
+                package_root = Path(pkg_resources.resource_filename('specify_cli', '..'))
+            
+            localized_templates_dir = package_root / 'templates' / 'i18n' / locale / 'commands'
+        except Exception:
+            pass
+    
+    # Strategy 3: If not found in package, try relative to this file (development mode)
+    if not localized_templates_dir.exists():
+        module_dir = Path(__file__).parent
+        localized_templates_dir = module_dir.parent.parent / 'templates' / 'i18n' / locale / 'commands'
+    
+    if not localized_templates_dir.exists():
+        # No localized templates available
+        if tracker:
+            tracker.skip("localize", f"no {locale} templates")
+        return
+    
+    # Map AI assistants to their command directories
+    agent_config = AGENT_CONFIG.get(selected_ai)
+    if not agent_config:
+        if tracker:
+            tracker.skip("localize", "unknown agent")
+        return
+    
+    # Determine target directory based on agent
+    agent_folder = agent_config["folder"].rstrip('/')
+    
+    # Common command directory patterns
+    command_dir_patterns = {
+        'claude': '.claude/commands',
+        'cursor-agent': '.cursor/commands',
+        'gemini': '.gemini/commands',
+        'copilot': '.github/agents',
+        'qwen': '.qwen/commands',
+        'opencode': '.opencode/command',
+        'codex': '.codex/prompts',
+        'windsurf': '.windsurf/workflows',
+        'kilocode': '.kilocode/workflows',
+        'auggie': '.augment/commands',
+        'roo': '.roo/commands',
+        'codebuddy': '.codebuddy/commands',
+        'qoder': '.qoder/commands',
+        'q': '.amazonq/prompts',
+        'amp': '.agents/commands',
+        'shai': '.shai/commands',
+        'bob': '.bob/commands',
+    }
+    
+    target_pattern = command_dir_patterns.get(selected_ai)
+    if not target_pattern:
+        # Try to infer from agent_folder
+        target_pattern = f"{agent_folder}/commands"
+    
+    target_dir = project_path / target_pattern
+    
+    if not target_dir.exists():
+        # Try alternative patterns (commands vs command vs workflows vs rules vs prompts)
+        for alt_suffix in ['command', 'workflows', 'rules', 'prompts']:
+            alt_dir = project_path / agent_folder / alt_suffix
+            if alt_dir.exists():
+                target_dir = alt_dir
+                break
+    
+    if not target_dir.exists():
+        if tracker:
+            tracker.skip("localize", f"target dir not found")
+        return
+    
+    # Copy localized templates, overwriting English versions
+    replaced_count = 0
+    for template_file in localized_templates_dir.glob('*.md'):
+        # Convert speckit.*.md to match the actual command file names
+        # Template files in i18n are named like: specify.md, plan.md, etc.
+        # Target files are named like: speckit.specify.md, speckit.plan.md, etc.
+        base_name = template_file.stem  # e.g., "specify"
+        target_file = target_dir / f"speckit.{base_name}.md"
+        
+        if target_file.exists():
+            shutil.copy2(template_file, target_file)
+            replaced_count += 1
+    
+    # Also check for TOML files for Gemini/Qwen
+    for template_file in localized_templates_dir.glob('*.toml'):
+        base_name = template_file.stem
+        target_file = target_dir / f"speckit.{base_name}.toml"
+        
+        if target_file.exists():
+            shutil.copy2(template_file, target_file)
+            replaced_count += 1
+    
+    if tracker:
+        if replaced_count > 0:
+            tracker.complete("localize", f"{replaced_count} {locale} templates")
+        else:
+            tracker.skip("localize", "no files replaced")
+
+
+
 @app.command()
 def init(
     project_name: str = typer.Argument(None, help="Name for your new project directory (optional if using --here, or use '.' for current directory)"),
@@ -1107,6 +1263,7 @@ def init(
         ("extract", "Extract template"),
         ("zip-list", "Archive contents"),
         ("extracted-summary", "Extraction summary"),
+        ("localize", "Apply language templates"),
         ("chmod", "Ensure scripts executable"),
         ("cleanup", "Cleanup"),
         ("git", "Initialize git repository"),
@@ -1125,6 +1282,12 @@ def init(
             local_client = httpx.Client(verify=local_ssl_context)
 
             download_and_extract_template(project_path, selected_ai, selected_script, here, verbose=False, tracker=tracker, client=local_client, debug=debug, github_token=github_token)
+
+            # Apply localized templates if language is not English
+            active_locale = get_active_locale(_cli_lang)
+            if active_locale != "en_US":
+                tracker.start("localize")
+                apply_localized_templates(project_path, active_locale, selected_ai, tracker=tracker)
 
             ensure_executable_scripts(project_path, tracker=tracker)
 
@@ -1307,7 +1470,7 @@ def version():
             pass
     
     # Fetch latest template release version
-    repo_owner = "github"
+    repo_owner = "rothcold"
     repo_name = "spec-kit"
     api_url = f"https://api.github.com/repos/{repo_owner}/{repo_name}/releases/latest"
     
