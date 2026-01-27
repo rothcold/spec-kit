@@ -71,7 +71,7 @@ $ARGUMENTS
    - JSON输出将包含 BRANCH_NAME 和 SPEC_FILE 路径
    - 对于参数中的单引号，如"I'm Groot"，使用转义语法：例如 'I'\''m Groot'（或如果可能使用双引号："I'm Groot"）
 
-3. 加载 `templates/spec-template.md` 以了解所需章节。
+3. 加载 `templates/i18n/zh_CN/spec-template.md` 以了解所需章节。
 
 4. 遵循此执行流程:
 

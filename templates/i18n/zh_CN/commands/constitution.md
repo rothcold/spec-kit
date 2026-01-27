@@ -41,10 +41,10 @@ $ARGUMENTS
    - 确保治理部分列出修订程序、版本控制政策和合规审查期望。
 
 4. 一致性传播检查清单（将先前的检查清单转换为主动验证）:
-   - 读取 `/templates/plan-template.md` 并确保任何"宪法检查"或规则与更新的原则一致。
-   - 读取 `/templates/spec-template.md` 以获取范围/要求对齐 - 如果宪法添加/删除强制部分或约束则更新。
-   - 读取 `/templates/tasks-template.md` 并确保任务分类反映新的或删除的原则驱动的任务类型（例如，可观察性、版本控制、测试纪律）。
-   - 读取 `/templates/commands/*.md` 中的每个命令文件（包括这个）以验证当需要通用指导时不再存在过时的引用（仅代理特定名称如CLAUDE）。
+   - 读取 `/templates/i18n/zh_CN/plan-template.md` 并确保任何"宪法检查"或规则与更新的原则一致。
+   - 读取 `/templates/i18n/zh_CN/spec-template.md` 以获取范围/要求对齐 - 如果宪法添加/删除强制部分或约束则更新。
+   - 读取 `/templates/i18n/zh_CN/tasks-template.md` 并确保任务分类反映新的或删除的原则驱动的任务类型（例如，可观察性、版本控制、测试纪律）。
+   - 读取 `/templates/i18n/zh_CN/commands/*.md` 中的每个命令文件（包括这个）以验证当需要通用指导时不再存在过时的引用（仅代理特定名称如CLAUDE）。
    - 读取任何运行时指导文档（例如，`README.md`、`docs/quickstart.md` 或代理特定指导文件如果存在）。更新对更改的原则的引用。
 
 5. 生成同步影响报告（在更新后作为HTML注释前置到宪法文件顶部）:
