@@ -118,6 +118,7 @@ All files saved with UTF-8 encoding and tested for proper rendering.
 ### Placeholder Verification
 
 Manual verification confirms all placeholders preserved:
+
 - `[FEATURE NAME]`, `[DATE]`, `[###-feature-name]`
 - `$ARGUMENTS`
 - `[PLACEHOLDERS]` in various contexts
@@ -157,6 +158,7 @@ Manual verification confirms all placeholders preserved:
 When initializing with `--lang zh_CN`:
 
 **Command Templates** (9 files, 75.8 KB):
+
 - ✅ speckit.specify.md
 - ✅ speckit.plan.md
 - ✅ speckit.tasks.md
@@ -168,6 +170,7 @@ When initializing with `--lang zh_CN`:
 - ✅ speckit.taskstoissues.md
 
 **Core Templates** (5 files, 17.4 KB):
+
 - ✅ agent-file-template.md
 - ✅ checklist-template.md
 - ✅ plan-template.md

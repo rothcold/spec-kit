@@ -49,3 +49,5 @@ sdd-*/
 # Cursor
 .cursor/
 
+# Opencode
+.opencode

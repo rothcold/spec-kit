@@ -14,14 +14,15 @@
     },
     "MD033": false,
     "MD041": false,
+    "MD060": false,
     "MD049": {
       "style": "asterisk"
     },
-    "MD050": {
-      "style": "asterisk"
-    }
+    "MD050": false,
+    "MD051": false
   },
   "ignores": [
-    ".genreleases/"
+    ".genreleases/",
+    "**/node_modules/**"
   ]
 }

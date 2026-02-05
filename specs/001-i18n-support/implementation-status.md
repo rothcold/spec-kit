@@ -10,18 +10,21 @@
 ## Current Implementation Status
 
 ### Phase 1: Setup ✅ COMPLETE (7/7 tasks)
+
 - [x] T001-T007: All infrastructure directories created
 - [x] babel dependency added to pyproject.toml
 - [x] babel.cfg configuration complete
 - [x] Directory structure: i18n/, templates/i18n/, tests/i18n/, scripts/i18n/
 
 ### Phase 2: Foundational ✅ COMPLETE (14/14 tasks)
+
 - [x] T008-T013: Core i18n module implemented (core.py, __init__.py)
 - [x] T014-T015: Translation directories created (en_US, zh_CN)
 - [x] T016-T018: Tooling scripts created (extract, compile, check-coverage)
 - [x] T019-T021: Test suites created (test_core.py, test_messages.py, test_templates.py)
 
 ### Phase 3: User Story 1 - CLI Messages 🟡 PARTIAL (3/17 tasks)
+
 - [x] T022-T023: i18n integrated into __init__.py
 - [x] T024: Sample CLI strings wrapped with _() function (~10 strings)
 - [ ] T025-T038: Message extraction, translation, compilation NOT COMPLETE
@@ -29,6 +32,7 @@
 **Blocker**: Remaining ~200-300 CLI strings need wrapping before extraction can proceed
 
 ### Phase 4: User Story 2 - Templates ✅ COMPLETE (13/22 tasks)
+
 - [x] T039-T040: Template directories created
 - [x] T041: apply_localized_templates() function implemented
 - [x] T047-T055: All 9 command templates translated (75,835 bytes Chinese)
@@ -38,6 +42,7 @@
 **Achievement**: Command templates are production-ready and tested!
 
 ### Phase 5-9: NOT STARTED
+
 - [ ] User Story 3 (Error Messages): 0/15 tasks
 - [ ] User Story 4 (Multilingual Teams): 0/8 tasks
 - [ ] Documentation Localization: 1/9 tasks (T089 complete)
@@ -51,6 +56,7 @@
 ### ✅ Working Features
 
 1. **CLI Language Selection**
+
    ```bash
    specify --lang zh_CN init my-project
    export SPECIFY_LANG=zh_CN; specify init my-project
@@ -103,11 +109,13 @@
 ## MVP Status Assessment
 
 ### MVP Definition (from tasks.md)
+
 Phases 1-3 (T001-T038) = 38 tasks
 
 **Current Progress**: 24/38 tasks complete (63%)
 
 ### What MVP Requires
+
 - ✅ Phase 1: Setup infrastructure
 - ✅ Phase 2: Core i18n module
 - 🟡 Phase 3: CLI message translation
@@ -115,6 +123,7 @@ Phases 1-3 (T001-T038) = 38 tasks
   - ❌ Extraction & Translation (T025-T038)
 
 ### MVP Blocker
+
 **T024 incomplete**: Only ~10 CLI strings wrapped, need ~200-300 more
 
 **Estimated Effort**: 4-6 hours to wrap remaining strings
@@ -132,16 +141,19 @@ Given that **all 9 command templates are translated and functional**, we could d
 **Status**: ✅ **READY NOW**
 
 **What Works**:
-```bash
-specify --lang zh_CN init my-project --ai cursor-agent
+
+   ```bash
+   specify --lang zh_CN init my-project --ai cursor-agent
 # → Creates project with Chinese .cursor/commands/*.md files
 ```
 
 **What's Missing**:
+
 - CLI messages still in English
 - Core templates (spec/plan/tasks) still in English
 
 **Value Delivered**:
+
 - Chinese developers can read and understand command workflows
 - 75,835 bytes of professional Chinese content
 - Zero regression for English users
@@ -153,22 +165,26 @@ specify --lang zh_CN init my-project --ai cursor-agent
 ### Option A: Ship Template MVP Now ✅ RECOMMENDED
 
 **What to do**:
+
 1. Mark current state as v0.1.0 of i18n feature
 2. Document as "Chinese command template support"
 3. Note that CLI messages are English-only for now
 4. Release and gather feedback
 
 **Pros**:
+
 - Immediate value to Chinese users
 - Proven and tested
 - Low risk
 
 **Cons**:
+
 - Mixed language experience (Chinese templates, English CLI)
 
 ### Option B: Complete Original MVP
 
 **What to do**:
+
 1. Wrap remaining ~200-300 CLI strings (4-6 hours)
 2. Extract to .pot file (10 minutes)
 3. Translate .po file to Chinese (8-10 hours, needs native speaker)
@@ -176,26 +192,31 @@ specify --lang zh_CN init my-project --ai cursor-agent
 5. Test end-to-end (1-2 hours)
 
 **Pros**:
+
 - Fully consistent Chinese experience
 - Matches original MVP definition
 
 **Cons**:
+
 - Significant translation work required
 - Delays release
 
 ### Option C: Hybrid Approach
 
 **What to do**:
+
 1. Ship Template MVP (Option A)
 2. Continue work on CLI message translation in background
 3. Release v0.2.0 when CLI messages complete
 
 **Pros**:
+
 - Fast initial release
 - Iterative improvement
 - User feedback guides translation priorities
 
 **Cons**:
+
 - Two releases needed
 
 ---
@@ -244,11 +265,13 @@ specify --lang zh_CN init my-project --ai cursor-agent
 ### Value Proposition
 
 **For Chinese Developers**:
+
 - Can understand command workflows in native language
 - Can read AI agent instructions in Chinese
 - Can follow Spec-Driven Development methodology with Chinese guidance
 
 **Limitation**:
+
 - Must read CLI progress messages in English (but they're brief and mostly technical)
 
 ---
